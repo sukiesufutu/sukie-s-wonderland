@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TikTok 投放热点看板</title>
+<style>
+  :root{--bg:#0e0e12;--card:#1a1a22;--card2:#22222c;--line:#2e2e3a;--fg:#f2f2f5;--mut:#9a9aa8;--pink:#fe2c55;--cyan:#25f4ee;--ok:#3fb950;--warn:#d29922}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif}
+  header{padding:20px 24px;background:linear-gradient(135deg,#1a1a22,#0e0e12);border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:20px}h1 .accent{color:var(--pink)}
+  .meta{color:var(--mut);font-size:12px;margin-top:6px}
+  .badge{display:inline-block;background:#15241a;color:#5fd17e;border:1px solid #25503a;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:6px}
+  #refresh{cursor:pointer;color:var(--cyan);border:1px solid var(--line);border-radius:8px;padding:2px 8px;background:var(--card);font-size:11px;margin-left:8px}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;padding:16px 24px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+  .tab{padding:8px 14px;border:1px solid var(--line);border-radius:20px;background:var(--card);cursor:pointer;font-size:13px;white-space:nowrap;transition:.15s}
+  .tab:hover{border-color:var(--pink)}
+  .tab.active{background:var(--pink);border-color:var(--pink);color:#fff;font-weight:600}
+  main{padding:20px 24px;max-width:1180px;margin:0 auto}
+  .panel{display:none}.panel.active{display:block}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+  .sec.fin{border-color:#3a2a15}
+  .sec h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .sec .src{color:var(--mut);font-size:12px;margin-bottom:12px}
+  .sec .src a{color:var(--cyan);text-decoration:none}.sec .src a:hover{text-decoration:underline}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .chip{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--fg)}
+  .chip b{color:var(--cyan)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;background:var(--card)}
+  tr:last-child td{border-bottom:none}
+  td.rank{color:var(--pink);font-weight:700;width:34px}
+  .tag{color:var(--cyan);font-weight:600}
+  .scroll{max-height:520px;overflow:auto;border-radius:8px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:var(--card2);color:var(--mut)}
+  .pill.b-high{background:#2a1520;color:#ff7a9c}.pill.b-medium{background:#2a2415;color:#e6c14b}.pill.b-low{background:#15241a;color:#5fd17e}
+  .empty{color:var(--warn);font-size:13px;padding:6px 0}
+  .note{background:#1c1c25;border:1px dashed var(--line);border-radius:10px;padding:12px 14px;color:var(--mut);font-size:12.5px}
+  .note a{color:var(--cyan)}
+  footer{max-width:1180px;margin:0 auto;padding:8px 24px 40px;color:var(--mut);font-size:12px}
+  footer h3{color:var(--fg);font-size:13px;margin:18px 0 6px}
+  code{background:#000;padding:1px 6px;border-radius:5px;color:#e6c14b;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>TikTok 投放热点看板 <span class="accent">· 多地区竞品热点</span><span class="badge">云端版</span></h1>
+  <div class="meta">数据来源：TikTok Creative Center + AppGrowing Global · 周期：Last 30 days (近30天) · 最后更新：<span id="updated">加载中…</span> · 8 个地区 <span id="refresh">↻ 立即刷新</span></div>
+</header>
+<div class="tabs" id="tabs"></div>
+<main id="main"><div style="padding:40px;color:#9a9aa8">数据加载中…</div></main>
+<footer>
+  <h3>数据来源与限制</h3>
+  <div class="note">
+    • <b>Top Ads 热门广告</b>：TikTok Creative Center → Top Ads（登录态抓取），每地区 ~20–40 条（匿名仅4条）。<br>
+    • <b>趋势话题 Trending Hashtags</b>：Creative Center → Trends → Hashtag，每地区约 6 个。<br>
+    • <b>🏦 金融竞品近期广告</b>：AppGrowing Global（第三方广告情报平台）→ 应用 → 金融类目 → 按最新排序，每地区前 50 条。area 过滤偏宽松，可能含跨区广告主。<br>
+    • <b>香港(HK)</b>：TikTok Top Ads 无数据（该地区不支持）；趋势话题回退到全球/US 榜。<br>
+    • <b>更新机制</b>：数据由本地已登录浏览器定时抓取（每日）→ 推送到 GitHub → Netlify 自动部署。本页每 10 分钟自动拉取最新 data.json。非真正实时（数据源需登录+验证码，无法云端无人值守抓取）。
+  </div>
+</footer>
+<script>
+let DATA=null, activeIdx=0;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function budgetClass(b){b=(b||"").toLowerCase();if(b.includes("high"))return"b-high";if(b.includes("medium"))return"b-medium";if(b.includes("low"))return"b-low";return"";}
+function adsTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区无 Top Ads 数据（HK 不支持）。</div>';return '<div class="scroll"><table><thead><tr><th>#</th><th>目标</th><th>行业</th><th>活动/品牌</th><th>点赞</th><th>CTR排名</th><th>预算</th></tr></thead><tbody>'+rows.map(a=>'<tr><td class="rank">'+esc(a.rank)+'</td><td>'+esc(a.objective)+'</td><td>'+esc(a.industry)+'</td><td>'+esc(a.campaign||'—')+'</td><td>'+esc(a.likes)+'</td><td>'+esc(a.ctr)+'</td><td><span class="pill '+budgetClass(a.budget)+'">'+esc(a.budget)+'</span></td></tr>').join('')+'</tbody></table></div>';}
+function hashTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区暂无趋势话题数据。</div>';return '<table><thead><tr><th>#</th><th>话题标签</th><th>分类</th><th>帖子数</th><th>浏览量</th></tr></thead><tbody>'+rows.map(h=>'<tr><td class="rank">'+esc(h.rank)+'</td><td class="tag">'+esc(h.hashtag)+'</td><td>'+esc(h.category||'—')+'</td><td>'+esc(h.posts)+'</td><td>'+esc(h.views)+'</td></tr>').join('')+'</tbody></table>';}
+function appgTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区暂无金融竞品广告数据。</div>';return '<div class="scroll"><table><thead><tr><th>#</th><th>素材</th><th>广告主 / 竞品</th><th>文案</th><th>投放天数</th><th>曝光估算</th><th>关联广告</th></tr></thead><tbody>'+rows.map((a,i)=>'<tr><td class="rank">'+(i+1)+'</td><td>'+(a.thumb?'<img loading="lazy" src="'+esc(a.thumb)+'" style="width:48px;height:64px;object-fit:cover;border-radius:6px;background:#222">':'—')+'</td><td><b>'+esc(a.advertiser||'—')+'</b></td><td style="max-width:420px;color:#c9c9d4">'+esc(a.copy||'—')+'</td><td>'+esc(a.runDays||'—')+'</td><td>'+esc(a.impressions||'—')+'</td><td>'+esc(a.relatedAds||'—')+'</td></tr>').join('')+'</tbody></table></div>';}
+function render(){
+  document.getElementById('updated').textContent=DATA.generatedAt||'—';
+  const tabs=document.getElementById('tabs'),main=document.getElementById('main');
+  tabs.innerHTML='';main.innerHTML='';
+  DATA.regions.forEach((r,i)=>{
+    const t=document.createElement('div');t.className='tab'+(i===activeIdx?' active':'');t.textContent=r.flag+' '+r.name.split(' ')[0];
+    t.onclick=()=>{activeIdx=i;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('p'+i).classList.add('active');window.scrollTo(0,0);};
+    tabs.appendChild(t);
+    const p=document.createElement('div');p.className='panel'+(i===activeIdx?' active':'');p.id='p'+i;
+    const chips=(r.topIndustries||[]).map(x=>'<span class="chip">'+esc(x[0])+' <b>'+x[1]+'</b></span>').join('');
+    p.innerHTML=
+      '<div class="sec"><h2>🔥 热门广告 Top Ads <span class="pill">'+r.topAds.length+' 条</span></h2>'+
+        '<div class="src">来源：Creative Center Top Ads · <a href="'+esc(r.topAdsUrl)+'" target="_blank">查看官方页 ↗</a></div>'+
+        (chips?'<div class="chips">热门行业：'+chips+'</div>':'')+adsTable(r.topAds)+'</div>'+
+      '<div class="sec fin"><h2>🏦 金融竞品近期广告 (AppGrowing) <span class="pill">'+r.appgAds.length+' 条</span></h2>'+
+        '<div class="src">来源：AppGrowing · 应用 · 金融类目 · 最新排序 · <a href="'+esc(r.leafletUrl)+'" target="_blank">官方页查看 ↗</a></div>'+
+        appgTable(r.appgAds)+'</div>'+
+      '<div class="sec"><h2>📈 趋势话题 Trending Hashtags <span class="pill">'+r.hashtags.length+' 个</span></h2>'+
+        '<div class="src">来源：Creative Center Trends · <a href="'+esc(r.hashtagUrl)+'" target="_blank">查看官方页 ↗</a></div>'+
+        hashTable(r.hashtags)+'</div>';
+    main.appendChild(p);
+  });
+}
+async function load(){try{const r=await fetch('data.json?_='+Date.now());DATA=await r.json();render();}catch(e){document.getElementById('updated').textContent='加载失败';}}
+document.getElementById('refresh').onclick=load;
+load();
+setInterval(load,10*60*1000);
+</script>
+</body>
+</html>
