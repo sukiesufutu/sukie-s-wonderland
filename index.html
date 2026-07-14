@@ -42,6 +42,22 @@
   footer{max-width:1180px;margin:0 auto;padding:8px 24px 40px;color:var(--mut);font-size:12px}
   footer h3{color:var(--fg);font-size:13px;margin:18px 0 6px}
   code{background:#000;padding:1px 6px;border-radius:5px;color:#e6c14b;font-size:12px}
+  .htabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .htab{padding:5px 12px;border:1px solid var(--line);border-radius:16px;background:var(--card2);cursor:pointer;font-size:12px;white-space:nowrap;transition:.15s;color:var(--mut)}
+  .htab:hover{border-color:var(--cyan);color:var(--fg)}
+  .htab.active{background:var(--cyan);border-color:var(--cyan);color:#000;font-weight:600}
+  .hpanel{display:none}.hpanel.active{display:block}
+  .hcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--card2)}
+  .hcard-top{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+  .hcard-tag{color:var(--cyan);font-weight:700;font-size:14px}
+  .hcard-cat{color:var(--mut);font-size:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1px 7px}
+  .hcard-stats{color:var(--mut);font-size:12px;margin-left:auto}
+  .hcovers{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .hcover{flex:0 0 auto;width:88px}
+  .hcover a{display:block;border-radius:8px;overflow:hidden;background:#111;aspect-ratio:9/16;border:1px solid var(--line);transition:.15s}
+  .hcover a:hover{border-color:var(--cyan);transform:scale(1.03)}
+  .hcover img{width:100%;height:100%;object-fit:cover;display:block}
+  .hcover-stat{font-size:10px;color:var(--mut);margin-top:3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 <body>
@@ -64,9 +80,26 @@
 <script>
 let DATA=null, activeIdx=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function hswitch(el,secId){const tabs=document.getElementById(secId+'_tabs');const idx=[...tabs.children].indexOf(el);[...tabs.children].forEach((t,i)=>{t.classList.toggle('active',i===idx);document.getElementById(secId+'_p'+i).classList.toggle('active',i===idx);});}
 function budgetClass(b){b=(b||"").toLowerCase();if(b.includes("high"))return"b-high";if(b.includes("medium"))return"b-medium";if(b.includes("low"))return"b-low";return"";}
 function adsTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区无 Top Ads 数据（HK 不支持）。</div>';return '<div class="scroll"><table><thead><tr><th>#</th><th>目标</th><th>行业</th><th>活动/品牌</th><th>点赞</th><th>CTR排名</th><th>预算</th></tr></thead><tbody>'+rows.map(a=>'<tr><td class="rank">'+esc(a.rank)+'</td><td>'+esc(a.objective)+'</td><td>'+esc(a.industry)+'</td><td>'+esc(a.campaign||'—')+'</td><td>'+esc(a.likes)+'</td><td>'+esc(a.ctr)+'</td><td><span class="pill '+budgetClass(a.budget)+'">'+esc(a.budget)+'</span></td></tr>').join('')+'</tbody></table></div>';}
-function hashTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区暂无趋势话题数据。</div>';return '<table><thead><tr><th>#</th><th>话题标签</th><th>分类</th><th>帖子数</th><th>浏览量</th></tr></thead><tbody>'+rows.map(h=>'<tr><td class="rank">'+esc(h.rank)+'</td><td class="tag">'+esc(h.hashtag)+'</td><td>'+esc(h.category||'—')+'</td><td>'+esc(h.posts)+'</td><td>'+esc(h.views)+'</td></tr>').join('')+'</tbody></table>';}
+function hashSection(rows,secId){
+  if(!rows.length)return'<div class="empty">⚠ 该地区暂无趋势话题数据。</div>';
+  const cats=['全部'];
+  rows.forEach(h=>{const c=h.category||'其他';if(!cats.includes(c))cats.push(c);});
+  const bycat={};rows.forEach(h=>{const c=h.category||'其他';(bycat[c]=bycat[c]||[]).push(h);});
+  const tabs=cats.map((c,i)=>'<div class="htab'+(i===0?' active':'')+'" onclick="hswitch(this,''+secId+'')">'+(c==='全部'?'全部 '+rows.length:c+(bycat[c]?' '+bycat[c].length:''))+'</div>').join('');
+  const panels=cats.map((c,i)=>{
+    const list=c==='全部'?rows.slice(0,10):(bycat[c]||[]).slice(0,10);
+    const cards=list.map(h=>{
+      const covers=(h.covers||[]).slice(0,3);
+      const coversHtml=covers.length?'<div class="hcovers">'+covers.map(cv=>'<div class="hcover"><a href="'+esc(cv.link||'')+'" target="_blank" rel="noopener"><img src="'+esc(cv.thumb)+'" loading="lazy" onerror="this.parentElement.parentElement.style.display='none'"></a>'+(cv.stat&&cv.stat[0]?'<div class="hcover-stat">'+esc(cv.stat[0])+'</div>':'')+'</div>').join('')+'</div>':'';
+      return '<div class="hcard"><div class="hcard-top"><span class="hcard-tag">'+esc(h.hashtag)+'</span>'+(h.category?'<span class="hcard-cat">'+esc(h.category)+'</span>':'')+'<span class="hcard-stats">'+esc(h.posts||'')+' posts · '+esc(h.views||'')+' views</span></div>'+coversHtml+'</div>';
+    }).join('');
+    return '<div class="hpanel'+(i===0?' active':'')+'" id="'+secId+'_p'+i+'">'+cards+'</div>';
+  }).join('');
+  return '<div class="htabs" id="'+secId+'_tabs">'+tabs+'</div>'+panels;
+}
 function appgTable(rows){if(!rows.length)return'<div class="empty">⚠ 该地区暂无金融竞品广告数据。</div>';return '<div class="scroll"><table><thead><tr><th>#</th><th>广告素材</th><th>广告主 / 竞品</th><th>文案</th><th>投放天数</th><th>曝光估算</th><th>关联广告</th></tr></thead><tbody>'+rows.map((a,i)=>'<tr><td class="rank">'+(i+1)+'</td><td>'+(a.thumb?'<a href="'+esc(a.thumb)+'" target="_blank" title="点击看大图"><img loading="lazy" src="'+esc(a.thumb)+'" style="width:96px;height:128px;object-fit:cover;border-radius:8px;background:#222;display:block"></a>':'—')+'</td><td><b>'+esc(a.advertiser||'—')+'</b></td><td style="max-width:420px;color:#c9c9d4">'+esc(a.copy||'—')+'</td><td>'+esc(a.runDays||'—')+'</td><td>'+esc(a.impressions||'—')+'</td><td>'+esc(a.relatedAds||'—')+'</td></tr>').join('')+'</tbody></table></div>';}
 function render(){
   document.getElementById('updated').textContent=DATA.generatedAt||'—';
@@ -81,7 +114,7 @@ function render(){
     p.innerHTML=
       '<div class="sec"><h2>📈 趋势话题 Trending Hashtags <span class="pill">'+r.hashtags.length+' 个</span></h2>'+
         '<div class="src">来源：Creative Center Trends · <a href="'+esc(r.hashtagUrl)+'" target="_blank">查看官方页 ↗</a></div>'+
-        hashTable(r.hashtags)+'</div>'+
+        hashSection(r.hashtags,'ht'+i)+'</div>'+
       '<div class="sec"><h2>🔥 热门广告 Top Ads <span class="pill">'+r.topAds.length+' 条</span></h2>'+
         '<div class="src">来源：Creative Center Top Ads · <a href="'+esc(r.topAdsUrl)+'" target="_blank">查看官方页（含视频素材）↗</a></div>'+
         (chips?'<div class="chips">热门行业：'+chips+'</div>':'')+adsTable(r.topAds)+'</div>'+
