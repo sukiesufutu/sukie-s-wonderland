@@ -87,7 +87,7 @@ function hashSection(rows,secId){
   const cats=['全部'];
   rows.forEach(h=>{const c=h.category||'其他';if(!cats.includes(c))cats.push(c);});
   const bycat={};rows.forEach(h=>{const c=h.category||'其他';(bycat[c]=bycat[c]||[]).push(h);});
-  const tabs=cats.map((c,i)=>'<div class="htab'+(i===0?' active':'')+'" onclick="hswitch(this,''+secId+'')">'+(c==='全部'?'全部 '+rows.length:c+(bycat[c]?' '+bycat[c].length:''))+'</div>').join('');
+  const tabs=cats.map((c,i)=>'<div class="htab'+(i===0?' active':'')+'" onclick="hswitch(this,\''+secId+'\')">'+(c==='全部'?'全部 '+rows.length:c+(bycat[c]?' '+bycat[c].length:''))+'</div>').join('');
   const panels=cats.map((c,i)=>{
     const list=c==='全部'?rows.slice(0,10):(bycat[c]||[]).slice(0,10);
     const cards=list.map(h=>{
