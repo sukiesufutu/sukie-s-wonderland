@@ -92,7 +92,7 @@ function hashSection(rows,secId){
     const list=c==='全部'?rows.slice(0,10):(bycat[c]||[]).slice(0,10);
     const cards=list.map(h=>{
       const covers=(h.covers||[]).slice(0,3);
-      const coversHtml=covers.length?'<div class="hcovers">'+covers.map(cv=>'<div class="hcover"><a href="'+esc(cv.link||'')+'" target="_blank" rel="noopener"><img src="'+esc(cv.thumb)+'" loading="lazy" onerror="this.parentElement.parentElement.style.display='none'"></a>'+(cv.stat&&cv.stat[0]?'<div class="hcover-stat">'+esc(cv.stat[0])+'</div>':'')+'</div>').join('')+'</div>':'';
+      const coversHtml=covers.length?'<div class="hcovers">'+covers.map(cv=>'<div class="hcover"><a href="'+esc(cv.link||'')+'" target="_blank" rel="noopener"><img src="'+esc(cv.thumb)+'" loading="lazy" onerror="this.parentElement.parentElement.style.display=\'none\'"></a>'+(cv.stat&&cv.stat[0]?'<div class="hcover-stat">'+esc(cv.stat[0])+'</div>':'')+'</div>').join('')+'</div>':'';
       return '<div class="hcard"><div class="hcard-top"><span class="hcard-tag">'+esc(h.hashtag)+'</span>'+(h.category?'<span class="hcard-cat">'+esc(h.category)+'</span>':'')+'<span class="hcard-stats">'+esc(h.posts||'')+' posts · '+esc(h.views||'')+' views</span></div>'+coversHtml+'</div>';
     }).join('');
     return '<div class="hpanel'+(i===0?' active':'')+'" id="'+secId+'_p'+i+'">'+cards+'</div>';
